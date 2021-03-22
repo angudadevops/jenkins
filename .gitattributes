@@ -1,2 +1,2 @@
 Dockerfile linguist-detectable=false
-kops-incubator/* linguist-generated
+kops-incubator/* -linguist-detectable
