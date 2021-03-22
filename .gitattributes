@@ -1,2 +1,2 @@
 Dockerfile linguist-detectable=false
-kops-incubator/Jenkinsfile linguist-detectable=true
+kops-incubator/* linguist-generated
