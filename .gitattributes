@@ -1,4 +1,1 @@
-Dockerfile linguist-detectable=false
 ** linguist-detectable=true
-*.xml linguist-detectable=true
-kops-incubator/Jenkinsfile linguist-detectable
