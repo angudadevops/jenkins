@@ -1,1 +1,1 @@
-*.JenkinsFile linguist-vendored
+JenkinsFile linguist-generated=true
