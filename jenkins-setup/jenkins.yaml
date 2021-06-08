@@ -58,3 +58,39 @@ spec:
       nodePort: 31051
       name: slave 
   type: NodePort
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: jenkins-job-setup
+spec:
+  template:
+    spec:
+      containers:
+      - name: jenkins-job
+        image: anguda/jenkins:automatic-setup
+        env:
+        - name: MY_NODE_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
+        - name: jenkins_url
+          value: "http://$(MY_NODE_IP):31050"
+        command: ["/bin/sh", "-c"]
+        args:
+         - cd ~ ;
+           wget -q https://raw.githubusercontent.com/angudadevops/jenkins/main/kops-cleanup.xml;
+           wget -q https://raw.githubusercontent.com/angudadevops/jenkins/main/kops-incubator.xml;
+           crumb=$(curl -s --cookie-jar /tmp/cookies -u admin:admin "$jenkins_url/crumbIssuer/api/json" | jq -r '.crumb');
+           jenkins_apikey=$(curl -s -XPOST  -H "Jenkins-Crumb:$crumb" --cookie /tmp/cookies "$jenkins_url/me/descriptorByName/jenkins.security.ApiTokenProperty/generateNewToken" --data 'newTokenName=default' --user admin:admin | jq -r '.data.tokenValue');
+           echo $jenkins_apikey;
+           curl -s -XPOST -k "$jenkins_url/createItem?name=Kops-Incubator" -u admin:$jenkins_apikey --data-binary @kops-incubator.xml -H "Content-Type:text/xml";
+           echo " =======================";
+           curl -s -XPOST -k "$jenkins_url/createItem?name=Kops-Cleanup" -u admin:$jenkins_apikey --data-binary @kops-cleanup.xml -H "Content-Type:text/xml";
+      initContainers:
+      - name: init-myservice
+        image: busybox
+        command: ['sh', '-c', 'echo Waiting for jenkins server become ready! && sleep 30']
+      restartPolicy: OnFailure
+  backoffLimit: 1
+  ttlSecondsAfterFinished: 60
